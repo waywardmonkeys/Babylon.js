@@ -365,7 +365,6 @@ export class WebGPUTextureManager {
         ).underlyingResource;
 
         this._getPipeline(WebGPUConstants.TextureFormat.RGBA8Unorm);
-        this._getVideoPipeline(WebGPUConstants.TextureFormat.RGBA8Unorm);
     }
 
     private _getPipeline(format: GPUTextureFormat, type: PipelineType = PipelineType.MipMap, params?: IPipelineParameters): [GPURenderPipeline, GPUBindGroupLayout] {
