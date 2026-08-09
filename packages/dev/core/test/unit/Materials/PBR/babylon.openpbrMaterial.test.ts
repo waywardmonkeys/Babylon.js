@@ -3,10 +3,13 @@ import { NullEngine } from "core/Engines/nullEngine";
 import { type Engine } from "core/Engines/engine";
 import { ShaderStore } from "core/Engines/shaderStore";
 import { Material } from "core/Materials/material";
+import { Color3 } from "core/Maths/math.color";
+import { Vector2 } from "core/Maths/math.vector";
 import { Mesh } from "core/Meshes/mesh";
 import { SubMesh } from "core/Meshes/subMesh";
 import { OpenPBRMaterial } from "core/Materials/PBR/openpbrMaterial";
 import { ThinTexture } from "core/Materials/Textures/thinTexture";
+import { Texture } from "core/Materials/Textures/texture";
 import { Scene } from "core/scene";
 import "core/Shaders/ShadersInclude/openpbrBaseLayerData";
 import "core/ShadersWGSL/ShadersInclude/openpbrBaseLayerData";
@@ -217,6 +220,51 @@ describe("OpenPBRMaterial", () => {
                 expect(include).not.toMatch(/alpha=(?:uniforms\.)?vBaseColor\.a/);
                 expect(include).toMatch(/alpha\*=(?:uniforms\.)?vBaseColor\.a/);
             }
+        });
+    });
+
+    describe("clone", () => {
+        it("preserves representative OpenPBR inputs", () => {
+            const material = new OpenPBRMaterial("mat", scene);
+            material.baseColor = new Color3(0.2, 0.3, 0.4);
+            material.specularRoughness = 0.61;
+            material.specularRoughnessAnisotropy = 0.72;
+            material.geometryTangent = new Vector2(0, 1);
+            material.transmissionWeight = 0.43;
+            material.subsurfaceWeight = 0.54;
+            material.coatWeight = 0.65;
+            material.fuzzWeight = 0.76;
+            material.geometryThinWalled = 1;
+            material.geometryOpacity = 0.87;
+            material.emissionColor = new Color3(1.2, 0.4, 0.1);
+            material.thinFilmWeight = 0.98;
+
+            const clone = material.clone("clone");
+
+            expect(clone.baseColor).toEqual(material.baseColor);
+            expect(clone.specularRoughness).toBe(material.specularRoughness);
+            expect(clone.specularRoughnessAnisotropy).toBe(material.specularRoughnessAnisotropy);
+            expect(clone.geometryTangent).toEqual(material.geometryTangent);
+            expect(clone.transmissionWeight).toBe(material.transmissionWeight);
+            expect(clone.subsurfaceWeight).toBe(material.subsurfaceWeight);
+            expect(clone.coatWeight).toBe(material.coatWeight);
+            expect(clone.fuzzWeight).toBe(material.fuzzWeight);
+            expect(clone.geometryThinWalled).toBe(material.geometryThinWalled);
+            expect(clone.geometryOpacity).toBe(material.geometryOpacity);
+            expect(clone.emissionColor).toEqual(material.emissionColor);
+            expect(clone.thinFilmWeight).toBe(material.thinFilmWeight);
+        });
+
+        it("clones a shared OpenPBR texture only once by default", () => {
+            const material = new OpenPBRMaterial("mat", scene);
+            const texture = new Texture(null, scene);
+            material.baseColorTexture = texture;
+            material.geometryOpacityTexture = texture;
+
+            const clone = material.clone("clone");
+
+            expect(clone.baseColorTexture).not.toBe(texture);
+            expect(clone.baseColorTexture).toBe(clone.geometryOpacityTexture);
         });
     });
 });

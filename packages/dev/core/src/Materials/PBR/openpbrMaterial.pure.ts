@@ -2196,6 +2196,28 @@ export class OpenPBRMaterial extends OpenPBRMaterialBase {
     public override clone(name: string, cloneTexturesOnlyOnce: boolean = true, rootUrl = ""): OpenPBRMaterial {
         const clone = SerializationHelper.Clone(() => new OpenPBRMaterial(name, this.getScene()), this, { cloneTexturesOnlyOnce });
 
+        for (const key in this._propertyList) {
+            const value = this._propertyList[key].value;
+            clone._propertyList[key].value = typeof value === "number" ? value : value.clone();
+        }
+
+        const textureMap = new Map<number, Nullable<BaseTexture>>();
+        for (const key in this._samplersList) {
+            const texture = this._samplersList[key].value;
+            if (texture === null) {
+                continue;
+            }
+
+            let clonedTexture: Nullable<BaseTexture>;
+            if (cloneTexturesOnlyOnce && textureMap.has(texture.uniqueId)) {
+                clonedTexture = textureMap.get(texture.uniqueId)!;
+            } else {
+                clonedTexture = texture.isRenderTarget ? texture : texture.clone();
+                textureMap.set(texture.uniqueId, clonedTexture);
+            }
+            clone._samplersList[key].value = clonedTexture;
+        }
+
         clone.id = name;
         clone.name = name;
 
