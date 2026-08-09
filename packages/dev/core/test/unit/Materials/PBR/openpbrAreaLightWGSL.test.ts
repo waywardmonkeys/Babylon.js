@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ShaderStore } from "core/Engines/shaderStore";
 import "core/ShadersWGSL/ShadersInclude/openpbrDirectLightingInit";
 import "core/ShadersWGSL/ShadersInclude/openpbrDirectLighting";
+import "core/ShadersWGSL/ShadersInclude/pbrDirectLightingSetupFunctions";
 import "core/Shaders/ShadersInclude/openpbrDirectLighting";
 
 describe("OpenPBR area-light WGSL", () => {
@@ -22,5 +23,11 @@ describe("OpenPBR area-light WGSL", () => {
             expect(include).toContain("coatReflectance.coloredF0,coatReflectance.coloredF90");
             expect(include).not.toMatch(/computeAreaSpecularLighting\([^;]+Reflectance\.F0/);
         }
+    });
+
+    it("separates thin-film and area-light fields in the pre-lighting structure", () => {
+        const include = ShaderStore.IncludesShadersStoreWGSL.pbrDirectLightingSetupFunctions;
+
+        expect(include).toContain("iridescenceIntensity: f32,");
     });
 });
