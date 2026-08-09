@@ -89,7 +89,7 @@ base_color = vBaseColor.rgb;
     alpha *= vColor.a;
 #endif
 base_color *= vec3(vBaseWeight);
-alpha = vBaseColor.a;
+alpha *= vBaseColor.a;
 base_metalness = vReflectanceInfo.x;
 base_diffuse_roughness = vBaseDiffuseRoughness;
 specular_roughness = vReflectanceInfo.y;
@@ -118,7 +118,9 @@ geometry_thickness = vGeometryThickness;
 // _____________________________ Alpha Information _______________________________
 #if defined(BASE_COLOR) && defined(ALPHA_FROM_BASE_COLOR_TEXTURE)
     alpha *= baseColorFromTexture.a;
-#elif defined(GEOMETRY_OPACITY)
+#endif
+
+#if defined(GEOMETRY_OPACITY)
     alpha *= opacityFromTexture.r;
     alpha *= vGeometryOpacityInfos.y;
 #endif

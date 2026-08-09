@@ -1,11 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NullEngine } from "core/Engines/nullEngine";
 import { type Engine } from "core/Engines/engine";
+import { ShaderStore } from "core/Engines/shaderStore";
+import { Material } from "core/Materials/material";
 import { Mesh } from "core/Meshes/mesh";
 import { SubMesh } from "core/Meshes/subMesh";
 import { OpenPBRMaterial } from "core/Materials/PBR/openpbrMaterial";
 import { ThinTexture } from "core/Materials/Textures/thinTexture";
 import { Scene } from "core/scene";
+import "core/Shaders/ShadersInclude/openpbrBaseLayerData";
+import "core/ShadersWGSL/ShadersInclude/openpbrBaseLayerData";
+
+class InspectableOpenPBRMaterial extends OpenPBRMaterial {
+    public shouldUseAlphaFromBaseColorTexture(): boolean {
+        return this._shouldUseAlphaFromBaseColorTexture();
+    }
+}
 
 describe("OpenPBRMaterial", () => {
     let engine: Engine;
@@ -169,6 +179,43 @@ describe("OpenPBRMaterial", () => {
             for (const uniform of uniformsArray) {
                 expect(uniform.firstLinkedKey, `expected ${uniform.name} to have a cached firstLinkedKey`).not.toBe("");
                 expect(uniform.linkedProperties[uniform.firstLinkedKey], `cached firstLinkedKey on ${uniform.name} must point to a real linked property`).toBeDefined();
+            }
+        });
+    });
+
+    describe("opacity composition", () => {
+        it("uses base-color alpha together with a geometry-opacity texture", () => {
+            const material = new InspectableOpenPBRMaterial("mat", scene);
+            const baseColor = new ThinTexture(null);
+            baseColor.hasAlpha = true;
+
+            material.baseColorTexture = baseColor;
+            material.geometryOpacityTexture = new ThinTexture(null);
+            material._useAlphaFromBaseColorTexture = true;
+            material.transparencyMode = Material.MATERIAL_ALPHABLEND;
+
+            expect(material.shouldUseAlphaFromBaseColorTexture()).toBe(true);
+        });
+
+        it("requests alpha blending for base-color texture alpha", () => {
+            const material = new InspectableOpenPBRMaterial("mat", scene);
+            const baseColor = new ThinTexture(null);
+            baseColor.hasAlpha = true;
+
+            material.baseColorTexture = baseColor;
+            material._useAlphaFromBaseColorTexture = true;
+            material.transparencyMode = Material.MATERIAL_ALPHABLEND;
+
+            expect(material.needAlphaBlending()).toBe(true);
+        });
+
+        it("multiplies every opacity source in both shader languages", () => {
+            for (const include of [ShaderStore.IncludesShadersStore.openpbrBaseLayerData, ShaderStore.IncludesShadersStoreWGSL.openpbrBaseLayerData]) {
+                expect(include).toContain("#if defined(BASE_COLOR) && defined(ALPHA_FROM_BASE_COLOR_TEXTURE)");
+                expect(include).toContain("#if defined(GEOMETRY_OPACITY)");
+                expect(include).not.toContain("#elif defined(GEOMETRY_OPACITY)");
+                expect(include).not.toMatch(/alpha=(?:uniforms\.)?vBaseColor\.a/);
+                expect(include).toMatch(/alpha\*=(?:uniforms\.)?vBaseColor\.a/);
             }
         });
     });

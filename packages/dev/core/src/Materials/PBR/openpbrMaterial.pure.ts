@@ -2157,7 +2157,7 @@ export class OpenPBRMaterial extends OpenPBRMaterialBase {
      * @returns whether or not the alpha value of the albedo texture should be used for alpha blending.
      */
     protected _shouldUseAlphaFromBaseColorTexture(): boolean {
-        return this._hasAlphaChannel() && this._transparencyMode !== Material.MATERIAL_OPAQUE && !this.geometryOpacityTexture;
+        return this._hasAlphaChannel() && this._transparencyMode !== Material.MATERIAL_OPAQUE;
     }
 
     /**
@@ -2172,7 +2172,7 @@ export class OpenPBRMaterial extends OpenPBRMaterialBase {
      * or a geometry opacity texture is present.
      */
     public override needAlphaBlending(): boolean {
-        return this.geometryOpacity < 1.0 || this.geometryOpacityTexture != null;
+        return this.geometryOpacity < 1.0 || this.geometryOpacityTexture != null || this._shouldUseAlphaFromBaseColorTexture();
     }
 
     /**

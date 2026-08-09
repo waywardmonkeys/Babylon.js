@@ -90,7 +90,7 @@ base_color = uniforms.vBaseColor.rgb;
     alpha *= fragmentInputs.vColor.a;
 #endif
 base_color *= vec3(uniforms.vBaseWeight);
-alpha = uniforms.vBaseColor.a;
+alpha *= uniforms.vBaseColor.a;
 base_metalness = uniforms.vReflectanceInfo.x;
 base_diffuse_roughness = uniforms.vBaseDiffuseRoughness;
 specular_roughness = uniforms.vReflectanceInfo.y;
@@ -119,7 +119,9 @@ geometry_thickness = uniforms.vGeometryThickness;
 // _____________________________ Alpha Information _______________________________
 #if defined(BASE_COLOR) && defined(ALPHA_FROM_BASE_COLOR_TEXTURE)
     alpha *= baseColorFromTexture.a;
-#elif defined(GEOMETRY_OPACITY)
+#endif
+
+#if defined(GEOMETRY_OPACITY)
     alpha *= opacityFromTexture.r;
     alpha *= uniforms.vGeometryOpacityInfos.y;
 #endif
