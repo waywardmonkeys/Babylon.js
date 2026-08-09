@@ -321,9 +321,18 @@
         total_direct_diffuse += slab_diffuse;
     #endif
     vec3 material_dielectric_base = mix(slab_diffuse * base_color.rgb, slab_translucent, surface_translucency_weight);
-    vec3 material_dielectric_gloss = material_dielectric_base * (1.0 - specularFresnel) + slab_glossy * specularColoredFresnel;
+    #if defined(AREALIGHT{X}) && defined(AREALIGHTUSED) && defined(AREALIGHTSUPPORTED)
+        // LTC evaluation already integrates the colored Fresnel response into the specular slab.
+        vec3 material_dielectric_gloss = material_dielectric_base + slab_glossy;
+    #else
+        vec3 material_dielectric_gloss = material_dielectric_base * (1.0 - specularFresnel) + slab_glossy * specularColoredFresnel;
+    #endif
     vec3 material_base_substrate = mix(material_dielectric_gloss, slab_metal, base_metalness);
-    vec3 material_coated_base = layer(material_base_substrate, slab_coat, coatFresnel, coatAbsorption, vec3(1.0));
+    #if defined(AREALIGHT{X}) && defined(AREALIGHTUSED) && defined(AREALIGHTSUPPORTED)
+        vec3 material_coated_base = material_base_substrate * coatAbsorption + slab_coat;
+    #else
+        vec3 material_coated_base = layer(material_base_substrate, slab_coat, coatFresnel, coatAbsorption, vec3(1.0));
+    #endif
     material_surface_direct += layer(material_coated_base, slab_fuzz, fuzzFresnel * fuzz_weight, vec3(1.0), fuzz_color);
 }
 #endif

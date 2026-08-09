@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import { ShaderStore } from "core/Engines/shaderStore";
 import "core/ShadersWGSL/ShadersInclude/openpbrDirectLightingInit";
 import "core/ShadersWGSL/ShadersInclude/openpbrDirectLighting";
+import "core/ShadersWGSL/ShadersInclude/pbrDirectLightingFunctions";
 import "core/ShadersWGSL/ShadersInclude/pbrDirectLightingSetupFunctions";
 import "core/Shaders/ShadersInclude/openpbrDirectLighting";
+import "core/Shaders/ShadersInclude/pbrDirectLightingFunctions";
 
 describe("OpenPBR area-light WGSL", () => {
     it("passes complete, correctly typed area-light arguments", () => {
@@ -22,6 +24,26 @@ describe("OpenPBR area-light WGSL", () => {
             expect(include).toContain("baseConductorReflectance.coloredF0,baseConductorReflectance.coloredF90");
             expect(include).toContain("coatReflectance.coloredF0,coatReflectance.coloredF90");
             expect(include).not.toMatch(/computeAreaSpecularLighting\([^;]+Reflectance\.F0/);
+        }
+    });
+
+    it("integrates material Fresnel independently from the area-light color", () => {
+        const wgsl = ShaderStore.IncludesShadersStoreWGSL.pbrDirectLightingFunctions;
+        const glsl = ShaderStore.IncludesShadersStore.pbrDirectLightingFunctions;
+
+        for (const include of [wgsl, glsl]) {
+            expect(include).toMatch(/reflectance0\*info\.areaLightFresnel\.x\+\(reflectance90-reflectance0\)\*info\.areaLightFresnel\.y/);
+            expect(include).toMatch(/return lightColor\*fresnel\*info\.areaLightSpecular/);
+        }
+    });
+
+    it("does not multiply already-integrated area-light specular by Fresnel again", () => {
+        const wgsl = ShaderStore.IncludesShadersStoreWGSL.openpbrDirectLighting;
+        const glsl = ShaderStore.IncludesShadersStore.openpbrDirectLighting;
+
+        for (const include of [wgsl, glsl]) {
+            expect(include).toContain("material_dielectric_base+slab_glossy");
+            expect(include).toContain("material_base_substrate*coatAbsorption+slab_coat");
         }
     });
 
