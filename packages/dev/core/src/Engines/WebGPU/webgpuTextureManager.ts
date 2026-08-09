@@ -36,6 +36,7 @@ import { type _IProcessingOptions } from "../Processors/shaderProcessingOptions"
 import { ShaderLanguage } from "core/Materials/shaderLanguage";
 import { Finalize, Initialize, Process } from "../Processors/shaderProcessor";
 import { type WebGPUShaderProcessorWGSL } from "./webgpuShaderProcessorsWGSL";
+import { ToHalfFloat } from "../../Misc/halfFloat";
 
 // TODO WEBGPU improve mipmap generation by using compute shaders
 
@@ -1277,6 +1278,24 @@ export class WebGPUTextureManager {
         offsetY = 0,
         allowGPUOptimization?: boolean
     ): void {
+        if (WebGPUTextureHelper.IsImageData(imageBitmap)) {
+            const imageData = imageBitmap.data;
+            if (format === WebGPUConstants.TextureFormat.RGBA16Float) {
+                const converted = new Uint16Array(imageData.length);
+                for (let index = 0; index < imageData.length; index++) {
+                    converted[index] = ToHalfFloat(imageData[index] / 255);
+                }
+                imageBitmap = new Uint8Array(converted.buffer);
+            } else if (format === WebGPUConstants.TextureFormat.RGBA32Float) {
+                const converted = new Float32Array(imageData.length);
+                for (let index = 0; index < imageData.length; index++) {
+                    converted[index] = imageData[index] / 255;
+                }
+                imageBitmap = new Uint8Array(converted.buffer);
+            } else {
+                imageBitmap = new Uint8Array(imageData.buffer, imageData.byteOffset, imageData.byteLength);
+            }
+        }
         const gpuTexture = WebGPUTextureHelper.IsInternalTexture(texture) ? (texture._hardwareTexture as WebGPUHardwareTexture).underlyingResource! : texture;
         const blockInformation = WebGPUTextureHelper.GetBlockInformationFromFormat(format);
         const gpuOrHdwTexture = WebGPUTextureHelper.IsInternalTexture(texture) ? (texture._hardwareTexture as WebGPUHardwareTexture) : texture;

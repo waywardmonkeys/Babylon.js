@@ -315,6 +315,10 @@ export class WebGPUTextureHelper {
         return (imageBitmap as ImageBitmap).close !== undefined;
     }
 
+    public static IsImageData(image: unknown): image is ImageData {
+        return (image as ImageData | undefined)?.data !== undefined;
+    }
+
     public static IsImageBitmapArray(imageBitmap: ImageBitmap[] | { width: number; height: number }): imageBitmap is ImageBitmap[] {
         return Array.isArray(imageBitmap as ImageBitmap[]) && (imageBitmap as ImageBitmap[])[0].close !== undefined;
     }

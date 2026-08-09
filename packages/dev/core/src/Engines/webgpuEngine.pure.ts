@@ -2525,7 +2525,7 @@ export class WebGPUEngine extends ThinWebGPUEngine {
                     continuationCallback: () => void
                 ) => boolean
             ) => {
-                const imageBitmap = img as ImageBitmap | { width: number; height: number }; // we will never get an HTMLImageElement in WebGPU
+                const imageBitmap = img as ImageBitmap | ImageData | { width: number; height: number }; // we will never get an HTMLImageElement in WebGPU
 
                 texture.baseWidth = imageBitmap.width;
                 texture.baseHeight = imageBitmap.height;
@@ -2541,7 +2541,7 @@ export class WebGPUEngine extends ThinWebGPUEngine {
                     // the texture could have been created before reaching this point so don't recreate it if already existing
                     const gpuTextureWrapper = this._textureHelper.createGPUTextureForInternalTexture(texture, imageBitmap.width, imageBitmap.height, undefined, creationFlags);
 
-                    if (WebGPUTextureHelper.IsImageBitmap(imageBitmap)) {
+                    if (WebGPUTextureHelper.IsImageBitmap(imageBitmap) || WebGPUTextureHelper.IsImageData(imageBitmap)) {
                         this._textureHelper.updateTexture(
                             imageBitmap,
                             texture,
