@@ -35,7 +35,7 @@
 
     // Specular Lobe
     #if defined(AREALIGHT{X}) && defined(AREALIGHTUSED) && defined(AREALIGHTSUPPORTED)
-        slab_glossy = computeAreaSpecularLighting(preInfo{X}, light{X}.vLightSpecular.rgb, baseConductorReflectance.F0, baseConductorReflectance.F90);
+        slab_glossy = computeAreaSpecularLighting(preInfo{X}, light{X}.vLightSpecular.rgb, baseDielectricReflectance.coloredF0, baseDielectricReflectance.coloredF90);
     #else
         {
             #ifdef ANISOTROPIC_BASE
@@ -216,7 +216,7 @@
 
     // Metal Lobe
     #if defined(AREALIGHT{X}) && defined(AREALIGHTUSED) && defined(AREALIGHTSUPPORTED)
-        slab_metal = computeAreaSpecularLighting(preInfo{X}, light{X}.vLightSpecular.rgb, baseConductorReflectance.F0, baseConductorReflectance.F90);
+        slab_metal = computeAreaSpecularLighting(preInfo{X}, light{X}.vLightSpecular.rgb, baseConductorReflectance.coloredF0, baseConductorReflectance.coloredF90);
     #else
         {
             // For OpenPBR, we use the F82 specular model for metallic materials and mix with the
@@ -251,7 +251,7 @@
 
     // Coat Lobe
     #if defined(AREALIGHT{X}) && defined(AREALIGHTUSED) && defined(AREALIGHTSUPPORTED)
-        slab_coat = computeAreaSpecularLighting(preInfoCoat{X}, light{X}.vLightSpecular.rgb, coatReflectance.F0, coatReflectance.F90);
+        slab_coat = computeAreaSpecularLighting(preInfoCoat{X}, light{X}.vLightSpecular.rgb, coatReflectance.coloredF0, coatReflectance.coloredF90);
     #else
         {
             #ifdef ANISOTROPIC_COAT
