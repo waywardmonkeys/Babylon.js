@@ -311,6 +311,13 @@ export class ShadowGenerator implements IShadowGenerator {
         this._normalBias = normalBias;
     }
 
+    /**
+     * Orient normal bias away from the light on both sides of a double-sided shadow caster.
+     * Enable this for thin surfaces that can face the light with either orientation.
+     * This defaults to false because it can enlarge the shadow of a closed double-sided mesh.
+     */
+    public useLightFacingNormalBias = false;
+
     protected _blurBoxOffset = 1;
     /**
      * Gets the blur box offset: offset applied during the blur pass.
@@ -1663,6 +1670,10 @@ export class ShadowGenerator implements IShadowGenerator {
 
         this._prepareShadowDefines(subMesh, useInstances, defines, isTransparent);
 
+        if (this.useLightFacingNormalBias && this.normalBias && !material.backFaceCulling && !this.forceBackFacesOnly) {
+            defines.push("#define SM_NORMALBIAS_TWOSIDED");
+        }
+
         if (shadowDepthWrapper) {
             if (!shadowDepthWrapper.isReadyForSubMesh(subMesh, defines, this, useInstances, this._scene.getEngine().currentRenderPassId)) {
                 return false;
@@ -2205,6 +2216,9 @@ export class ShadowGenerator implements IShadowGenerator {
         serializationObject.frustumEdgeFalloff = this.frustumEdgeFalloff;
         serializationObject.bias = this.bias;
         serializationObject.normalBias = this.normalBias;
+        if (this.useLightFacingNormalBias) {
+            serializationObject.useLightFacingNormalBias = true;
+        }
         serializationObject.usePercentageCloserFiltering = this.usePercentageCloserFiltering;
         serializationObject.useContactHardeningShadow = this.useContactHardeningShadow;
         serializationObject.contactHardeningLightSizeUVRatio = this.contactHardeningLightSizeUVRatio;
@@ -2284,6 +2298,8 @@ export class ShadowGenerator implements IShadowGenerator {
         if (parsedShadowGenerator.normalBias !== undefined) {
             shadowGenerator.normalBias = parsedShadowGenerator.normalBias;
         }
+
+        shadowGenerator.useLightFacingNormalBias = !!parsedShadowGenerator.useLightFacingNormalBias;
 
         if (parsedShadowGenerator.usePercentageCloserFiltering) {
             shadowGenerator.usePercentageCloserFiltering = true;
